@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Test: pausar principal al reproducir secundario</title>
+</head>
+<body>
+  <h1>Test: pausar principal al secundario y reanudar al terminar</h1>
+  <p>1. Dale play al audio principal.</p>
+  <p>2. Sin pausarlo, dale play al audio secundario → el principal se pausa.</p>
+  <p>3. Cuando termine el secundario (o lo pauses), el principal vuelve a dar play.</p>
+  <hr>
+  <p><strong>Principal:</strong></p>
+  <audio id="main" data-main-audio controls src="/audios/01- The Olive Garden Night Sky.mp3"></audio>
+  <p><strong>Secundario:</strong></p>
+  <audio id="secondary" controls src="/audios/cortos/01- Puerta.mp3"></audio>
+  <script>
+    const main = document.getElementById('main');
+    const secondary = document.getElementById('secondary');
+    let secondaryPlayingCount = 0;
+    let mainShouldResume = false;
+
+    secondary.addEventListener('play', () => {
+      secondaryPlayingCount++;
+      mainShouldResume = true;
+      main.pause();
+      console.log('Secundario play -> principal pausado, count=', secondaryPlayingCount);
+    });
+    function checkResumeMain() {
+      if (secondaryPlayingCount === 0 && mainShouldResume) {
+        mainShouldResume = false;
+        main.play();
+        console.log('Secundario paró -> principal reanudado');
+      }
+    }
+    secondary.addEventListener('pause', () => {
+      secondaryPlayingCount = Math.max(0, secondaryPlayingCount - 1);
+      checkResumeMain();
+    });
+    secondary.addEventListener('ended', () => {
+      secondaryPlayingCount = Math.max(0, secondaryPlayingCount - 1);
+      checkResumeMain();
+    });
+    main.addEventListener('play', () => {
+      if (secondaryPlayingCount > 0) {
+        main.pause();
+        console.log('Principal intentó play pero hay secundario -> pausado');
+      }
+    });
+  </script>
+</body>
+</html>
