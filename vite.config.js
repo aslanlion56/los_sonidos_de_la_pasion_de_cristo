@@ -8,7 +8,7 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.svg', 'audios/**/*.mp3'],
       manifest: {
         name: 'Sonidos de la Pasión de Cristo',
         short_name: 'Sonidos Pasión',
@@ -24,10 +24,16 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png}'],
-        // Sin caché de audio: los audios se cargan directamente desde la red/origen
         runtimeCaching: [
           {
-            // Cachear recursos estáticos
+            urlPattern: /\/audios\/.*\.mp3$/,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'audios-cache',
+              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 365 }
+            }
+          },
+          {
             urlPattern: /\.(?:js|css|html|svg|png|jpg|jpeg|gif|webp)$/,
             handler: 'CacheFirst',
             options: {
