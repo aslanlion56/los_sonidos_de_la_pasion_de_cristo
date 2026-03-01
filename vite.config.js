@@ -24,6 +24,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png}'],
+        // Fallback de navegación: servir index.html para que la app funcione 100% offline
+        navigateFallback: '/index.html',
+        navigateFallbackAllowlist: [/^\/.*/],
         runtimeCaching: [
           {
             urlPattern: /\/audios\/.*\.mp3$/,
@@ -34,7 +37,10 @@ export default defineConfig({
             }
           },
           {
-            urlPattern: /\.(?:js|css|html|svg|png|jpg|jpeg|gif|webp)$/,
+            // No interceptar documento (navegación); solo js, css, imágenes
+            urlPattern: ({ request }) =>
+              request.destination !== 'document' &&
+              /\.(?:js|css|svg|png|jpg|jpeg|gif|webp)$/.test(new URL(request.url).pathname),
             handler: 'CacheFirst',
             options: {
               cacheName: 'static-resources',
@@ -43,25 +49,13 @@ export default defineConfig({
                 maxAgeSeconds: 60 * 60 * 24 * 30 // 30 días
               }
             }
-          },
-          {
-            // Fallback para navegación
-            urlPattern: ({ request }) => request.destination === 'document',
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'pages-cache',
-              networkTimeoutSeconds: 3
-            }
           }
         ],
-        // Precachear archivos importantes
         additionalManifestEntries: [
           { url: '/index.html', revision: null }
         ],
-        // Asegurar que el Service Worker se active inmediatamente
         skipWaiting: true,
         clientsClaim: true,
-        // Importar scripts de Workbox para mejor manejo offline
         importScripts: []
       },
       // Estrategia de actualización
