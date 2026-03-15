@@ -11,6 +11,11 @@ function AudioControls({
   onVolumeChange,
   playPauseButtonRef
 }) {
+  const safeDuration = Number.isFinite(duration) && duration > 0 ? duration : 0
+  const safeCurrentTime = safeDuration > 0
+    ? Math.max(0, Math.min(currentTime, safeDuration))
+    : 0
+
   const formatTime = (seconds) => {
     if (!seconds || isNaN(seconds)) return '0:00'
     const mins = Math.floor(seconds / 60)
@@ -19,9 +24,9 @@ function AudioControls({
   }
 
   const progressPercentage = useMemo(() => {
-    if (!duration || duration === 0) return 0
-    return (currentTime / duration) * 100
-  }, [currentTime, duration])
+    if (!safeDuration) return 0
+    return (safeCurrentTime / safeDuration) * 100
+  }, [safeCurrentTime, safeDuration])
 
   const volumePercentage = useMemo(() => {
     return volume * 100
@@ -53,10 +58,11 @@ function AudioControls({
             <input
               type="range"
               min="0"
-              max={duration || 0}
-              value={currentTime}
+              max={safeDuration || 1}
+              value={safeCurrentTime}
               onChange={(e) => onTimeChange(parseFloat(e.target.value))}
               className="progress-slider"
+              disabled={!safeDuration}
               aria-label="Progreso de reproducción"
             />
             <div 
@@ -64,7 +70,7 @@ function AudioControls({
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
-          <span className="time-display">{formatTime(duration)}</span>
+          <span className="time-display">{formatTime(safeDuration)}</span>
         </div>
       </div>
 

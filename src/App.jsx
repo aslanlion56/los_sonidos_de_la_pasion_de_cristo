@@ -7,6 +7,18 @@ import logoFooter from './assets/logo.png'
 import versionData from './version.json'
 import './styles/components.css'
 
+const getSafeAudioDuration = (audio) => {
+  if (!audio) return 0
+  if (Number.isFinite(audio.duration) && audio.duration > 0) return audio.duration
+
+  if (audio.seekable && audio.seekable.length > 0) {
+    const seekableEnd = audio.seekable.end(audio.seekable.length - 1)
+    if (Number.isFinite(seekableEnd) && seekableEnd > 0) return seekableEnd
+  }
+
+  return 0
+}
+
 function App() {
   const [activeMainIndex, setActiveMainIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -33,7 +45,7 @@ function App() {
     const audio = mainAudioRef.current
     if (!audio) return
     const updateTime = () => setCurrentTime(audio.currentTime)
-    const updateDuration = () => setDuration(audio.duration)
+    const updateDuration = () => setDuration(getSafeAudioDuration(audio))
     const handleEnded = () => {
       const currentAudio = mainAudios[activeMainIndex]
       const currentId = currentAudio?.id
@@ -61,10 +73,14 @@ function App() {
     }
     audio.addEventListener('timeupdate', updateTime)
     audio.addEventListener('loadedmetadata', updateDuration)
+    audio.addEventListener('durationchange', updateDuration)
+    audio.addEventListener('canplay', updateDuration)
     audio.addEventListener('ended', handleEnded)
     return () => {
       audio.removeEventListener('timeupdate', updateTime)
       audio.removeEventListener('loadedmetadata', updateDuration)
+      audio.removeEventListener('durationchange', updateDuration)
+      audio.removeEventListener('canplay', updateDuration)
       audio.removeEventListener('ended', handleEnded)
     }
   }, [activeMainIndex, shouldLoop])
@@ -92,6 +108,8 @@ function App() {
   useEffect(() => {
     const audio = mainAudioRef.current
     if (!audio) return
+    setCurrentTime(0)
+    setDuration(0)
     audio.load()
   }, [activeMainIndex])
 
@@ -137,10 +155,17 @@ function App() {
   }
 
   const handleTimeChange = (newTime) => {
-    if (mainAudioRef.current) {
-      mainAudioRef.current.currentTime = newTime
-      setCurrentTime(newTime)
-    }
+    const audio = mainAudioRef.current
+    if (!audio) return
+
+    const maxSeek = getSafeAudioDuration(audio)
+    if (!maxSeek) return
+
+    const seekTime = Math.max(0, Math.min(newTime, maxSeek))
+    if (typeof audio.fastSeek === 'function') audio.fastSeek(seekTime)
+    else audio.currentTime = seekTime
+
+    setCurrentTime(seekTime)
   }
 
   const anySecondaryPlaying = secondaryAudiosState.some(a => a.isPlaying)
