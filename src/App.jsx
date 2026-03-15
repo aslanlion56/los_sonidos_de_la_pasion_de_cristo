@@ -3,6 +3,8 @@ import AudioCarousel from './components/AudioCarousel'
 import SecondaryAudioGrid from './components/SecondaryAudioGrid'
 import { mainAudios, secondaryAudios } from './data/audioData'
 import logo from './assets/icons/Los_Sonidos_de_la_Pasion.png'
+import logoFooter from './assets/logo.png'
+import versionData from './version.json'
 import './styles/components.css'
 
 function App() {
@@ -67,11 +69,11 @@ function App() {
     }
   }, [activeMainIndex, shouldLoop])
 
-  // --- VOLUMEN del principal: si hay secundario sonando, bajar 30% (x0.5) ---
+  // --- VOLUMEN del principal: si hay secundario sonando, bajar 30% (x0.7) ---
   useEffect(() => {
     const el = mainAudioRef.current ?? document.querySelector('audio[data-main-audio]')
     if (!el) return
-    const efectivo = secondaryPlayingCountRef.current > 0 ? volume * 0.5 : volume
+    const efectivo = secondaryPlayingCountRef.current > 0 ? volume * 0.7 : volume
     el.volume = efectivo
   }, [volume, secondaryAudiosState])
 
@@ -142,10 +144,10 @@ function App() {
   }
 
   const anySecondaryPlaying = secondaryAudiosState.some(a => a.isPlaying)
-  const effectiveVolume = anySecondaryPlaying ? volume * 0.5 : volume
+  const effectiveVolume = anySecondaryPlaying ? volume * 0.7 : volume
 
   const handleVolumeChange = (newVolume) => {
-    setVolume(anySecondaryPlaying ? Math.min(1, newVolume / 0.5) : newVolume)
+    setVolume(anySecondaryPlaying ? Math.min(1, newVolume / 0.7) : newVolume)
   }
 
   // --- TOGGLE SECUNDARIO: al dar PLAY bajar volumen principal 30%; secundarios al 100% ---
@@ -236,6 +238,20 @@ function App() {
           onVariantChange={handleSecondaryVariantChange}
         />
       </main>
+      <footer className="app-footer">
+        <a
+          href="https://www.facebook.com/nuevavida.icb"
+          target="_blank"
+          rel="noopener noreferrer"
+          title={`NUEVA VIDA Iglesia Cristiana Bautista - ${versionData.version}`}
+        >
+          <img
+            src={logoFooter}
+            alt="NUEVA VIDA Iglesia Cristiana Bautista"
+            className="footer-logo"
+          />
+        </a>
+      </footer>
     </div>
   )
 }

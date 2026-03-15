@@ -10,7 +10,7 @@
     "normalize-audio": "node scripts/normalize-audio.js",
     "firebase:login": "npx firebase-tools login",
     "firebase:init": "npx firebase-tools init hosting",
-    "firebase:deploy": "npm run build && npx firebase-tools deploy --only hosting",
+    "firebase:deploy": "node scripts/bump-version.js && npm run build && npx firebase-tools deploy --only hosting",
     "firebase:deploy:hosting": "npx firebase-tools deploy --only hosting"
   },
   "dependencies": {

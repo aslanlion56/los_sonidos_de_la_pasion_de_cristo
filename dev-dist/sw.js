@@ -67,7 +67,7 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-f87553f6'], (function (workbox) { 'use strict';
+define(['./workbox-2ae722a1'], (function (workbox) { 'use strict';
 
   importScripts();
   self.skipWaiting();
@@ -82,11 +82,11 @@ define(['./workbox-f87553f6'], (function (workbox) { 'use strict';
     "url": "registerSW.js",
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
-    "url": "index.html",
-    "revision": "0.puhivhtv4d"
+    "url": "/index.html",
+    "revision": "0.thp8b9e987g"
   }], {});
   workbox.cleanupOutdatedCaches();
-  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
+  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
     allowlist: [/^\/$/]
   }));
   workbox.registerRoute(/\/audios\/.*\.mp3$/, new workbox.CacheFirst({
@@ -96,19 +96,14 @@ define(['./workbox-f87553f6'], (function (workbox) { 'use strict';
       maxAgeSeconds: 31536000
     })]
   }), 'GET');
-  workbox.registerRoute(/\.(?:js|css|html|svg|png|jpg|jpeg|gif|webp)$/, new workbox.CacheFirst({
+  workbox.registerRoute(({
+    request
+  }) => request.destination !== "document" && /\.(?:js|css|svg|png|jpg|jpeg|gif|webp)$/.test(new URL(request.url).pathname), new workbox.CacheFirst({
     "cacheName": "static-resources",
     plugins: [new workbox.ExpirationPlugin({
       maxEntries: 100,
       maxAgeSeconds: 2592000
     })]
-  }), 'GET');
-  workbox.registerRoute(({
-    request
-  }) => request.destination === "document", new workbox.NetworkFirst({
-    "cacheName": "pages-cache",
-    "networkTimeoutSeconds": 3,
-    plugins: []
   }), 'GET');
 
 }));

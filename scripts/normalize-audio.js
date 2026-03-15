@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Homologa el volumen de todos los MP3 al del más bajo (más silencioso).
+ * Homologa el volumen de todos los MP3 y los sube ~10% respecto al más bajo.
  * 1. Mide el LUFS de cada archivo.
- * 2. Toma como objetivo el LUFS del archivo más bajo.
- * 3. Normaliza todos los demás a ese nivel (no amplifica, solo baja los fuertes).
+ * 2. Toma como base el LUFS del archivo más bajo y le suma VOLUME_BOOST_DB (+1 dB ≈ 10%).
+ * 3. Normaliza todos a ese nivel (los fuertes bajan, los débiles se amplifican hasta el objetivo).
  *
  * Requiere: ffmpeg instalado (brew install ffmpeg / apt install ffmpeg)
  *
@@ -23,6 +23,8 @@ const OUTPUT_ROOT = join(__dirname, '..', 'public', 'audios_normalized')
 
 const LRA = 7
 const TRUE_PEAK = -2
+/** Subir el volumen un ~10% respecto al más bajo: +1 dB en LUFS */
+const VOLUME_BOOST_DB = 1
 
 function findMp3Files(dir, base = '') {
   const entries = readdirSync(dir, { withFileTypes: true })
@@ -110,18 +112,19 @@ function main() {
   }
 
   const minLUFS = Math.min(...measurements.map(m => m.lufs))
+  const targetLUFS = minLUFS + VOLUME_BOOST_DB
   const quietest = measurements.find(m => m.lufs === minLUFS)
-  console.log(`\nArchivo más bajo (objetivo): ${quietest.relPath} → ${minLUFS.toFixed(1)} LUFS`)
-  console.log(`Todos los audios se normalizarán a ${minLUFS.toFixed(1)} LUFS.\n`)
+  console.log(`\nArchivo más bajo: ${quietest.relPath} → ${minLUFS.toFixed(1)} LUFS`)
+  console.log(`Objetivo: ${targetLUFS.toFixed(1)} LUFS (+${VOLUME_BOOST_DB} dB, ~10% más volumen).\n`)
 
   console.log('Paso 2: normalizando todos al mismo volumen...\n')
   ensureDir(OUTPUT_ROOT)
 
   for (let i = 0; i < measurements.length; i++) {
     const { relPath, lufs } = measurements[i]
-    process.stdout.write(`[${i + 1}/${measurements.length}] ${relPath} (${lufs.toFixed(1)} → ${minLUFS.toFixed(1)} LUFS) ... `)
+    process.stdout.write(`[${i + 1}/${measurements.length}] ${relPath} (${lufs.toFixed(1)} → ${targetLUFS.toFixed(1)} LUFS) ... `)
     try {
-      normalizeFile(relPath, minLUFS)
+      normalizeFile(relPath, targetLUFS)
       console.log('OK')
     } catch (err) {
       console.log('ERROR:', err.message)

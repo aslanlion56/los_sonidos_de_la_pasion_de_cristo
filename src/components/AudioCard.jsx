@@ -112,8 +112,25 @@ function AudioCard({ audio, currentSrc, isPlaying, volume, onToggle, onVolumeCha
         <h3 className="card-name">{audio.name}</h3>
       </div>
 
-      <div className="card-progress-wrap" aria-hidden>
+      <div className="card-progress-wrap" aria-label="Progreso de reproducción">
         <div className="card-progress-track">
+          <input
+            type="range"
+            min="0"
+            max={duration || 0}
+            step="0.1"
+            value={currentTime}
+            onChange={(e) => {
+              const newTime = parseFloat(e.target.value)
+              if (audioRef.current) {
+                audioRef.current.currentTime = newTime
+                setCurrentTime(newTime)
+              }
+            }}
+            onClick={(e) => e.stopPropagation()}
+            className="card-progress-slider"
+            aria-label={`Adelantar o atrasar ${audio.name}`}
+          />
           <div
             className="card-progress-bar"
             style={{ width: `${progressPercentage}%` }}

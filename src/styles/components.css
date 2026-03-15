@@ -221,13 +221,18 @@
   height: 8px;
   background: var(--surface-light);
   border-radius: 4px;
-  overflow: hidden;
+  overflow: visible;
 }
 
+/* Área de interacción más alta que la barra para que el cursor pointer cubra todo el círculo */
 .progress-slider {
   position: absolute;
+  left: 0;
+  right: 0;
   width: 100%;
-  height: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 24px;
   opacity: 0;
   cursor: pointer;
   z-index: 2;
@@ -242,6 +247,22 @@
   border-radius: 4px;
   transition: width 0.1s linear;
   z-index: 1;
+}
+
+/* Círculo en la barra de progreso (principal) */
+.progress-bar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+  width: 16px;
+  height: 16px;
+  background: var(--primary-color);
+  border: 2px solid var(--text-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 6px var(--shadow);
+  pointer-events: none;
 }
 
 .volume-controls {
@@ -264,13 +285,18 @@
   height: 6px;
   background: var(--surface);
   border-radius: 3px;
-  overflow: hidden;
+  overflow: visible;
 }
 
+/* Área de interacción más alta que la barra para que el cursor pointer cubra todo el círculo */
 .volume-slider {
   position: absolute;
+  left: 0;
+  right: 0;
   width: 100%;
-  height: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 22px;
   opacity: 0;
   cursor: pointer;
   z-index: 2;
@@ -285,6 +311,22 @@
   border-radius: 3px;
   transition: width 0.25s ease-out;
   z-index: 1;
+}
+
+/* Círculo al final del control de volumen (principal), centrado sobre la barra */
+.volume-bar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+  width: 14px;
+  height: 14px;
+  background: var(--accent);
+  border: 2px solid var(--text-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 4px var(--shadow);
+  pointer-events: none;
 }
 
 .volume-controls.volume-reduced .volume-bar {
@@ -488,17 +530,63 @@
   margin-bottom: 0.5rem;
 }
 .card-progress-track {
-  height: 1px;
+  height: 4px;
   width: 100%;
-  background: var(--border);
-  border-radius: 0;
-  overflow: hidden;
+  background: var(--surface-light);
+  border-radius: 2px;
+  overflow: visible;
+  position: relative;
+  cursor: pointer;
 }
 .card-progress-bar {
   height: 100%;
-  background: var(--accent);
-  border-radius: 0;
+  background: var(--primary-color);
+  border-radius: 2px;
   transition: width 0.15s linear;
+  position: relative;
+}
+/* Círculo en la barra de progreso (secundario), mismo tamaño que el de volumen */
+.card-progress-bar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: var(--primary-color);
+  border: 2px solid var(--text-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 3px var(--shadow);
+  pointer-events: none;
+}
+/* Área de interacción más alta que la barra para que el cursor pointer cubra todo el círculo */
+.card-progress-slider {
+  position: absolute;
+  left: 0;
+  right: 0;
+  width: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 20px;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+.card-progress-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.card-progress-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
 }
 
 .card-controls {
@@ -558,7 +646,7 @@
   height: 4px;
   background: var(--surface-light);
   border-radius: 2px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .card-volume-bar {
@@ -572,10 +660,31 @@
   z-index: 1;
 }
 
+/* Círculo al final del control de volumen (secundario), centrado sobre la barra */
+.card-volume-bar::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translate(50%, -50%);
+  width: 10px;
+  height: 10px;
+  background: var(--accent);
+  border: 2px solid var(--text-primary);
+  border-radius: 50%;
+  box-shadow: 0 0 3px var(--shadow);
+  pointer-events: none;
+}
+
+/* Área de interacción más alta que la barra para que el cursor pointer cubra todo el círculo */
 .card-volume-slider {
   position: absolute;
+  left: 0;
+  right: 0;
   width: 100%;
-  height: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 20px;
   opacity: 0;
   cursor: pointer;
   z-index: 2;
