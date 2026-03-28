@@ -77,7 +77,7 @@ function AudioCard({ audio, currentSrc, isPlaying, volume, onToggle, onVolumeCha
       <audio
         ref={audioRef}
         src={currentSrc}
-        preload="metadata"
+        preload="none"
       />
       {hasVariants && (
         <div className="card-variant-dots" aria-label="Seleccionar variante de audio">

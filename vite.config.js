@@ -29,11 +29,14 @@ export default defineConfig({
         navigateFallbackAllowlist: [/^\/.*/],
         runtimeCaching: [
           {
-            urlPattern: /\/audios\/.*\.mp3$/,
+            // Respaldo si alguna petición no cae en el precache; MP3 suele ir con Range → 206
+            urlPattern: /\/audios\/.*\.mp3$/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'audios-cache',
-              expiration: { maxEntries: 50, maxAgeSeconds: 60 * 60 * 24 * 365 }
+              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 365 },
+              cacheableResponse: { statuses: [200, 206] },
+              rangeRequests: true
             }
           },
           {

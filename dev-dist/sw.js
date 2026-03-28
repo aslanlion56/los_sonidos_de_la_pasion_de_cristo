@@ -67,7 +67,7 @@ if (!self.define) {
     });
   };
 }
-define(['./workbox-2ae722a1'], (function (workbox) { 'use strict';
+define(['./workbox-74c688c2'], (function (workbox) { 'use strict';
 
   importScripts();
   self.skipWaiting();
@@ -83,18 +83,20 @@ define(['./workbox-2ae722a1'], (function (workbox) { 'use strict';
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
     "url": "/index.html",
-    "revision": "0.5ei1td317d8"
+    "revision": "0.7q4shcikjqg"
   }], {});
   workbox.cleanupOutdatedCaches();
   workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
     allowlist: [/^\/$/]
   }));
-  workbox.registerRoute(/\/audios\/.*\.mp3$/, new workbox.CacheFirst({
+  workbox.registerRoute(/\/audios\/.*\.mp3$/i, new workbox.CacheFirst({
     "cacheName": "audios-cache",
     plugins: [new workbox.ExpirationPlugin({
-      maxEntries: 50,
+      maxEntries: 60,
       maxAgeSeconds: 31536000
-    })]
+    }), new workbox.CacheableResponsePlugin({
+      statuses: [200, 206]
+    }), new workbox.RangeRequestsPlugin()]
   }), 'GET');
   workbox.registerRoute(({
     request
