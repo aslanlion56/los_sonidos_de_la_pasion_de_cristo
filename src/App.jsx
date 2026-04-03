@@ -230,6 +230,19 @@ function App() {
   return (
     <div className="app">
       <header className="app-header">
+        <a
+          href="https://www.facebook.com/nuevavida.icb"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="app-header-brand"
+          title={`NUEVA VIDA Iglesia Cristiana Bautista - ${versionData.version}`}
+        >
+          <img
+            src={logoFooter}
+            alt="NUEVA VIDA Iglesia Cristiana Bautista"
+            className="header-brand-logo"
+          />
+        </a>
         <img src={logo} alt="Los Sonidos de la Pasión de Cristo" className="header-logo" />
       </header>
       <main className="app-main">
@@ -263,20 +276,6 @@ function App() {
           onVariantChange={handleSecondaryVariantChange}
         />
       </main>
-      <footer className="app-footer">
-        <a
-          href="https://www.facebook.com/nuevavida.icb"
-          target="_blank"
-          rel="noopener noreferrer"
-          title={`NUEVA VIDA Iglesia Cristiana Bautista - ${versionData.version}`}
-        >
-          <img
-            src={logoFooter}
-            alt="NUEVA VIDA Iglesia Cristiana Bautista"
-            className="footer-logo"
-          />
-        </a>
-      </footer>
     </div>
   )
 }
