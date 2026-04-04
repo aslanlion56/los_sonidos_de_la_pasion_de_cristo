@@ -5,11 +5,16 @@ function AudioCarousel({
   audios,
   activeIndex,
   onAudioChange,
+  onNavigateMain,
+  isMainNavTransitioning = false,
   isPlaying,
   currentTime,
   duration,
   volume,
+  volumeRangeMax = 1,
+  volumeDisabled = false,
   isVolumeReduced = false,
+  volumeTooltip,
   onPlayPause,
   onTimeChange,
   onVolumeChange,
@@ -26,6 +31,7 @@ function AudioCarousel({
     }
   }, [activeIndex])
 
+  /** Flechas del carrusel: cambio de pista inmediato (comportamiento original). */
   const handlePrev = () => {
     const newIndex = activeIndex > 0 ? activeIndex - 1 : audios.length - 1
     onAudioChange(newIndex)
@@ -50,6 +56,36 @@ function AudioCarousel({
       <div className="carousel-header">
         <h2>Audios Principales</h2>
       </div>
+
+      {onNavigateMain && (
+        <div
+          className={`main-track-nav ${isMainNavTransitioning ? 'main-track-nav--transitioning' : ''}`}
+          aria-busy={isMainNavTransitioning}
+        >
+          <button
+            type="button"
+            className="main-track-nav-btn"
+            onClick={() => onNavigateMain(-1)}
+            disabled={isMainNavTransitioning}
+            aria-label="Pista anterior (transición de volumen)"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
+            </svg>
+          </button>
+          <button
+            type="button"
+            className="main-track-nav-btn"
+            onClick={() => onNavigateMain(1)}
+            disabled={isMainNavTransitioning}
+            aria-label="Pista siguiente (transición de volumen)"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
+            </svg>
+          </button>
+        </div>
+      )}
       
       <div className="carousel-wrapper">
         <button 
@@ -100,7 +136,10 @@ function AudioCarousel({
             currentTime={currentTime}
             duration={duration}
             volume={volume}
+            volumeRangeMax={volumeRangeMax}
+            volumeDisabled={volumeDisabled}
             isVolumeReduced={isVolumeReduced}
+            volumeTooltip={volumeTooltip}
             onPlayPause={onPlayPause}
             onTimeChange={onTimeChange}
             onVolumeChange={onVolumeChange}
