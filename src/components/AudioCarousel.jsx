@@ -4,8 +4,7 @@ import AudioControls from './AudioControls'
 function AudioCarousel({
   audios,
   activeIndex,
-  onAudioChange,
-  onNavigateMain,
+  onNavigateToTrackWithRamp,
   isMainNavTransitioning = false,
   isPlaying,
   currentTime,
@@ -31,22 +30,20 @@ function AudioCarousel({
     }
   }, [activeIndex])
 
-  /** Flechas del carrusel: cambio de pista inmediato (comportamiento original). */
   const handlePrev = () => {
     const newIndex = activeIndex > 0 ? activeIndex - 1 : audios.length - 1
-    onAudioChange(newIndex)
+    onNavigateToTrackWithRamp(newIndex)
   }
 
   const handleNext = () => {
     const newIndex = activeIndex < audios.length - 1 ? activeIndex + 1 : 0
-    onAudioChange(newIndex)
+    onNavigateToTrackWithRamp(newIndex)
   }
 
   const handleCardClick = (index) => {
     if (index !== activeIndex) {
-      onAudioChange(index)
+      onNavigateToTrackWithRamp(index)
     } else {
-      // Si es la misma tarjeta, reproducir/pausar
       onPlayPause()
     }
   }
@@ -57,40 +54,11 @@ function AudioCarousel({
         <h2>Audios Principales</h2>
       </div>
 
-      {onNavigateMain && (
-        <div
-          className={`main-track-nav ${isMainNavTransitioning ? 'main-track-nav--transitioning' : ''}`}
-          aria-busy={isMainNavTransitioning}
-        >
-          <button
-            type="button"
-            className="main-track-nav-btn"
-            onClick={() => onNavigateMain(-1)}
-            disabled={isMainNavTransitioning}
-            aria-label="Pista anterior (transición de volumen)"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-              <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z"/>
-            </svg>
-          </button>
-          <button
-            type="button"
-            className="main-track-nav-btn"
-            onClick={() => onNavigateMain(1)}
-            disabled={isMainNavTransitioning}
-            aria-label="Pista siguiente (transición de volumen)"
-          >
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-              <path d="M10 6L8.59 7.41 13.17 12l-4.58 4.59L10 18l6-6z"/>
-            </svg>
-          </button>
-        </div>
-      )}
-      
       <div className="carousel-wrapper">
         <button 
           className="carousel-nav-btn prev-btn"
           onClick={handlePrev}
+          disabled={isMainNavTransitioning}
           aria-label="Audio anterior"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
@@ -121,6 +89,7 @@ function AudioCarousel({
         <button 
           className="carousel-nav-btn next-btn"
           onClick={handleNext}
+          disabled={isMainNavTransitioning}
           aria-label="Audio siguiente"
         >
           <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">

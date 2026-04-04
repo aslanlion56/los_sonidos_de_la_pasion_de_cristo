@@ -442,11 +442,10 @@
   font-variant-numeric: tabular-nums;
 }
 
-.volume-reduced-badge {
-  font-size: 0.7rem;
+/* Volumen efectivo bajo (secundario, rampa entre pistas / repetición): sin texto extra, solo color */
+.volume-display--attenuated {
   color: var(--accent);
-  margin-left: 0.15rem;
-  white-space: nowrap;
+  font-weight: 600;
 }
 
 /* ===== SECONDARY AUDIO GRID ===== */
@@ -463,12 +462,6 @@
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 0.25rem;
-}
-
-.grid-subtitle {
-  color: var(--text-secondary);
-  font-size: 0.75rem;
-  font-weight: 400;
 }
 
 .secondary-audio-grid {

@@ -19,10 +19,19 @@ const getSafeAudioDuration = (audio) => {
   return 0
 }
 
-/** Tras rampa: nivel objetivo = 30 % del volumen efectivo base (tras ×0.7 si hay secundario). */
-const MAIN_NAV_DUCK_FACTOR = 0.3
+/** Tras rampa: nivel objetivo = 20 % del volumen efectivo base (tras ×0.5 si hay secundario). */
+const MAIN_NAV_DUCK_FACTOR = 0.2
 /** Duración de la bajada gradual y de la subida gradual al cambiar de pista con Anterior/Siguiente. */
 const MAIN_NAV_RAMP_MS = 2000
+/** Con secundario sonando, el principal usa este factor del volumen del slider (0.5 = 50 %). */
+const SECONDARY_MAIN_VOLUME_FACTOR = 0.5
+
+/** HTMLMediaElement.volume solo admite [0, 1]; las rampas y floats pueden pasarse ligeramente. */
+const clampVolume = (x) => {
+  const n = Number(x)
+  if (!Number.isFinite(n)) return 0
+  return Math.min(1, Math.max(0, n))
+}
 
 function App() {
   const [activeMainIndex, setActiveMainIndex] = useState(0)
@@ -32,27 +41,41 @@ function App() {
   const [volume, setVolume] = useState(1)
   const [shouldLoop, setShouldLoop] = useState(true)
   const mainAudioRef = useRef(null)
-  // Cuántos secundarios suenan ahora (para bajar volumen del principal un 30%)
+  // Cuántos secundarios suenan ahora (principal al 50 % del volumen del slider)
   const secondaryPlayingCountRef = useRef(0)
   const volumeRef = useRef(1)
   const mainNavTimerRef = useRef(null)
   /** Durante rampas de volumen (bajada/subida): no pisar con applyMainAudioElementVolume. */
   const mainNavRampActiveRef = useRef(false)
-  /** Tras bajar en rampa, al cargar la nueva pista hay que subir en rampa desde el 30 %. */
+  /** Tras bajar en rampa, al cargar la nueva pista hay que subir en rampa desde el 20 %. */
   const pendingMainNavRampUpRef = useRef(false)
   const rampRafRef = useRef(null)
+  /** Pre-fin (últimos 2 s): animación del volumen a ~60 fps, misma fluidez que rampDownThenChangeTrack. */
+  const preEndRafRef = useRef(null)
+  const preEndRafRunningRef = useRef(false)
   /** Nivel de salida actual del principal (0…1); se anima en rampa para que el slider refleje el movimiento. */
   const [rampDisplayLevel, setRampDisplayLevel] = useState(null)
-  /** True desde inicio de bajada hasta fin de subida (Anterior/Siguiente). */
+  /** True durante rampas manuales, subida tras loop, o últimos 2 s antes del final (pre-fin). */
   const [mainNavDucking, setMainNavDucking] = useState(false)
+  const activeMainIndexRef = useRef(0)
+  const shouldLoopRef = useRef(true)
+  /** Últimos 2 s: duck activo (no repetir pista 12). */
+  const preEndDuckRef = useRef(false)
+
+  useEffect(() => {
+    activeMainIndexRef.current = activeMainIndex
+  }, [activeMainIndex])
+  useEffect(() => {
+    shouldLoopRef.current = shouldLoop
+  }, [shouldLoop])
 
   const getBaseEffectiveVolume = useCallback(() => {
-    const v = volumeRef.current
-    return secondaryPlayingCountRef.current > 0 ? v * 0.7 : v
+    const v = clampVolume(volumeRef.current)
+    return secondaryPlayingCountRef.current > 0 ? v * SECONDARY_MAIN_VOLUME_FACTOR : v
   }, [])
 
   useEffect(() => {
-    volumeRef.current = volume
+    volumeRef.current = clampVolume(volume)
   }, [volume])
 
   const cancelRampAnimation = useCallback(() => {
@@ -62,12 +85,21 @@ function App() {
     }
   }, [])
 
+  const cancelPreEndRaf = useCallback(() => {
+    if (preEndRafRef.current != null) {
+      cancelAnimationFrame(preEndRafRef.current)
+      preEndRafRef.current = null
+    }
+    preEndRafRunningRef.current = false
+  }, [])
+
   useEffect(() => {
     return () => {
       if (mainNavTimerRef.current) clearTimeout(mainNavTimerRef.current)
       cancelRampAnimation()
+      cancelPreEndRaf()
     }
-  }, [cancelRampAnimation])
+  }, [cancelRampAnimation, cancelPreEndRaf])
 
   const [secondaryAudiosState, setSecondaryAudiosState] = useState(
     secondaryAudios.map(audio => ({
@@ -79,63 +111,20 @@ function App() {
     }))
   )
 
-  // --- EVENTOS del audio principal ---
-  useEffect(() => {
-    const audio = mainAudioRef.current
-    if (!audio) return
-    const updateTime = () => setCurrentTime(audio.currentTime)
-    const updateDuration = () => setDuration(getSafeAudioDuration(audio))
-    const handleEnded = () => {
-      const currentAudio = mainAudios[activeMainIndex]
-      const currentId = currentAudio?.id
-
-      // Solo al terminar la pista (no al dar clic): excepciones
-      // 12- Resurrection: parar toda la reproducción, no repetir ni seguir
-      if (currentId === 12) {
-        setIsPlaying(false)
-        return
-      }
-      // 08- Via Dolorosa: no repetir, pasar a la siguiente canción
-      if (currentId === 8) {
-        if (activeMainIndex < mainAudios.length - 1) {
-          handleMainAudioChange(activeMainIndex + 1)
-        }
-        return
-      }
-      // Resto (y 08/12 al dar clic se comportan igual): repetir si shouldLoop
-      if (shouldLoop) {
-        audio.currentTime = 0
-        audio.play()
-      } else {
-        setIsPlaying(false)
-      }
-    }
-    audio.addEventListener('timeupdate', updateTime)
-    audio.addEventListener('loadedmetadata', updateDuration)
-    audio.addEventListener('durationchange', updateDuration)
-    audio.addEventListener('canplay', updateDuration)
-    audio.addEventListener('ended', handleEnded)
-    return () => {
-      audio.removeEventListener('timeupdate', updateTime)
-      audio.removeEventListener('loadedmetadata', updateDuration)
-      audio.removeEventListener('durationchange', updateDuration)
-      audio.removeEventListener('canplay', updateDuration)
-      audio.removeEventListener('ended', handleEnded)
-    }
-  }, [activeMainIndex, shouldLoop])
-
   const applyMainAudioElementVolume = useCallback(() => {
     const el = mainAudioRef.current ?? document.querySelector('audio[data-main-audio]')
     if (!el) return
-    el.volume = getBaseEffectiveVolume()
+    el.volume = clampVolume(getBaseEffectiveVolume())
   }, [getBaseEffectiveVolume])
 
   const finishMainNavTransition = useCallback(() => {
     mainNavRampActiveRef.current = false
+    preEndDuckRef.current = false
+    cancelPreEndRaf()
     setRampDisplayLevel(null)
     setMainNavDucking(false)
     applyMainAudioElementVolume()
-  }, [applyMainAudioElementVolume])
+  }, [applyMainAudioElementVolume, cancelPreEndRaf])
 
   const startRampUpAnimation = useCallback(() => {
     const el = mainAudioRef.current ?? document.querySelector('audio[data-main-audio]')
@@ -143,15 +132,17 @@ function App() {
       finishMainNavTransition()
       return
     }
-    const base = getBaseEffectiveVolume()
+    mainNavRampActiveRef.current = true
+    setMainNavDucking(true)
+    const base = clampVolume(getBaseEffectiveVolume())
     const v0 = base * MAIN_NAV_DUCK_FACTOR
     const v1 = base
-    el.volume = v0
-    setRampDisplayLevel(v0)
+    el.volume = clampVolume(v0)
+    setRampDisplayLevel(clampVolume(v0))
     const t0 = performance.now()
     const step = (now) => {
       const u = Math.min(1, (now - t0) / MAIN_NAV_RAMP_MS)
-      const level = v0 + (v1 - v0) * u
+      const level = clampVolume(v0 + (v1 - v0) * u)
       el.volume = level
       setRampDisplayLevel(level)
       if (u < 1) {
@@ -169,14 +160,16 @@ function App() {
       const el = mainAudioRef.current ?? document.querySelector('audio[data-main-audio]')
       if (!el) return
       cancelRampAnimation()
+      cancelPreEndRaf()
+      preEndDuckRef.current = false
       mainNavRampActiveRef.current = true
       setMainNavDucking(true)
-      const v0 = getBaseEffectiveVolume()
+      const v0 = clampVolume(getBaseEffectiveVolume())
       const v1 = v0 * MAIN_NAV_DUCK_FACTOR
       const t0 = performance.now()
       const step = (now) => {
         const u = Math.min(1, (now - t0) / MAIN_NAV_RAMP_MS)
-        const level = v0 + (v1 - v0) * u
+        const level = clampVolume(v0 + (v1 - v0) * u)
         el.volume = level
         setRampDisplayLevel(level)
         if (u < 1) {
@@ -191,12 +184,188 @@ function App() {
       }
       rampRafRef.current = requestAnimationFrame(step)
     },
-    [cancelRampAnimation, getBaseEffectiveVolume]
+    [cancelRampAnimation, cancelPreEndRaf, getBaseEffectiveVolume]
   )
 
-  // --- VOLUMEN del principal: secundarios ×0.7 (sin rampa manual encima).
+  // --- EVENTOS del audio principal: timeupdate (pre-fin 2 s) + ended ---
   useEffect(() => {
-    if (mainNavRampActiveRef.current) return
+    const audio = mainAudioRef.current
+    if (!audio) return
+
+    const updateTime = () => {
+      const t = audio.currentTime
+      setCurrentTime(t)
+
+      if (mainNavRampActiveRef.current) return
+
+      const dur = getSafeAudioDuration(audio)
+      const idx = activeMainIndexRef.current
+      const id = mainAudios[idx]?.id
+
+      if (!dur || id === 12) {
+        if (preEndDuckRef.current) {
+          cancelPreEndRaf()
+          preEndDuckRef.current = false
+          setMainNavDucking(false)
+          setRampDisplayLevel(null)
+          applyMainAudioElementVolume()
+        }
+        return
+      }
+
+      const remaining = Math.max(0, dur - t)
+      const windowSec = Math.min(2, dur)
+      const inPreEndWindow =
+        dur > 0 &&
+        t >= dur - windowSec - 0.001 &&
+        remaining > 0.03 &&
+        t < dur - 0.01
+
+      const loopOk = shouldLoopRef.current && id !== 12 && id !== 8
+      const viaOk = id === 8
+      const shouldPreEnd = (viaOk || loopOk) && inPreEndWindow
+
+      if (shouldPreEnd) {
+        preEndDuckRef.current = true
+        setMainNavDucking(true)
+        if (!preEndRafRunningRef.current) {
+          preEndRafRunningRef.current = true
+          const tick = () => {
+            const a = mainAudioRef.current
+            if (!a || mainNavRampActiveRef.current) {
+              cancelPreEndRaf()
+              return
+            }
+            const d = getSafeAudioDuration(a)
+            const ct = a.currentTime
+            const i = activeMainIndexRef.current
+            const trackId = mainAudios[i]?.id
+            const rem = Math.max(0, d - ct)
+            const ws = Math.min(2, d)
+            const inWin =
+              d > 0 &&
+              ct >= d - ws - 0.001 &&
+              rem > 0.03 &&
+              ct < d - 0.01
+            const loop = shouldLoopRef.current && trackId !== 12 && trackId !== 8
+            const via = trackId === 8
+            const preEndNow = (via || loop) && inWin
+
+            if (preEndNow) {
+              const baseVol = clampVolume(getBaseEffectiveVolume())
+              const u = Math.max(0, Math.min(1, rem / ws))
+              const vol = clampVolume(
+                baseVol * (MAIN_NAV_DUCK_FACTOR + (1 - MAIN_NAV_DUCK_FACTOR) * u),
+              )
+              a.volume = vol
+              setRampDisplayLevel(vol)
+              preEndRafRef.current = requestAnimationFrame(tick)
+              return
+            }
+
+            preEndRafRef.current = null
+            preEndRafRunningRef.current = false
+
+            if (!preEndDuckRef.current) return
+
+            const seekedEarly = d > 0 && ct < d - ws - 0.05
+            if (seekedEarly) {
+              preEndDuckRef.current = false
+              setMainNavDucking(false)
+              setRampDisplayLevel(null)
+              applyMainAudioElementVolume()
+              return
+            }
+
+            const baseHold = clampVolume(getBaseEffectiveVolume())
+            const duck = clampVolume(baseHold * MAIN_NAV_DUCK_FACTOR)
+            a.volume = duck
+            setRampDisplayLevel(duck)
+          }
+          preEndRafRef.current = requestAnimationFrame(tick)
+        }
+      } else if (preEndDuckRef.current) {
+        const seekedEarly = dur > 0 && t < dur - windowSec - 0.05
+        if (seekedEarly) {
+          cancelPreEndRaf()
+          preEndDuckRef.current = false
+          setMainNavDucking(false)
+          setRampDisplayLevel(null)
+          applyMainAudioElementVolume()
+        }
+      }
+    }
+
+    const updateDuration = () => setDuration(getSafeAudioDuration(audio))
+
+    const handleEnded = () => {
+      const idx = activeMainIndexRef.current
+      const currentId = mainAudios[idx]?.id
+      const el = mainAudioRef.current
+
+      cancelPreEndRaf()
+      preEndDuckRef.current = false
+
+      if (currentId === 12) {
+        setIsPlaying(false)
+        setRampDisplayLevel(null)
+        setMainNavDucking(false)
+        mainNavRampActiveRef.current = false
+        applyMainAudioElementVolume()
+        return
+      }
+
+      if (currentId === 8) {
+        if (idx < mainAudios.length - 1) {
+          pendingMainNavRampUpRef.current = true
+          setActiveMainIndex(idx + 1)
+          setShouldLoop(true)
+          setTimeout(() => setIsPlaying(true), 100)
+        }
+        return
+      }
+
+      if (shouldLoopRef.current && el) {
+        el.currentTime = 0
+        el.play().catch(() => {})
+        requestAnimationFrame(() => {
+          startRampUpAnimation()
+        })
+        return
+      }
+
+      setIsPlaying(false)
+    }
+
+    audio.addEventListener('timeupdate', updateTime)
+    audio.addEventListener('loadedmetadata', updateDuration)
+    audio.addEventListener('durationchange', updateDuration)
+    audio.addEventListener('canplay', updateDuration)
+    audio.addEventListener('ended', handleEnded)
+    return () => {
+      if (preEndRafRef.current != null) {
+        cancelAnimationFrame(preEndRafRef.current)
+        preEndRafRef.current = null
+      }
+      preEndRafRunningRef.current = false
+      audio.removeEventListener('timeupdate', updateTime)
+      audio.removeEventListener('loadedmetadata', updateDuration)
+      audio.removeEventListener('durationchange', updateDuration)
+      audio.removeEventListener('canplay', updateDuration)
+      audio.removeEventListener('ended', handleEnded)
+    }
+  }, [
+    activeMainIndex,
+    shouldLoop,
+    cancelPreEndRaf,
+    getBaseEffectiveVolume,
+    applyMainAudioElementVolume,
+    startRampUpAnimation,
+  ])
+
+  // --- VOLUMEN del principal: secundarios ×0.5 (sin rampa manual encima).
+  useEffect(() => {
+    if (mainNavRampActiveRef.current || preEndDuckRef.current) return
     applyMainAudioElementVolume()
   }, [volume, secondaryAudiosState, applyMainAudioElementVolume])
 
@@ -228,7 +397,7 @@ function App() {
     audio.addEventListener('canplay', onCanPlay, { once: true })
     audio.load()
     if (pendingMainNavRampUpRef.current) {
-      const duck = getBaseEffectiveVolume() * MAIN_NAV_DUCK_FACTOR
+      const duck = clampVolume(getBaseEffectiveVolume() * MAIN_NAV_DUCK_FACTOR)
       audio.volume = duck
       setRampDisplayLevel(duck)
     } else {
@@ -243,9 +412,22 @@ function App() {
       mainNavTimerRef.current = null
     }
     cancelRampAnimation()
-  }, [cancelRampAnimation])
+    cancelPreEndRaf()
+    preEndDuckRef.current = false
+  }, [cancelRampAnimation, cancelPreEndRaf])
 
-  /** Anterior/siguiente: rampa de bajada 2 s → cambio de pista → rampa de subida 2 s al canplay. */
+  /** Carrusel (flechas y tarjetas): misma rampa 2 s + cambio + subida. */
+  const goToMainTrackWithRamp = useCallback(
+    (nextIndex) => {
+      if (nextIndex === activeMainIndex) return
+      clearMainNavTimers()
+      pendingMainNavRampUpRef.current = false
+      rampDownThenChangeTrack(nextIndex)
+    },
+    [activeMainIndex, clearMainNavTimers, rampDownThenChangeTrack]
+  )
+
+  /** Teclado ← / → */
   const navigateMainWithCrossfade = useCallback(
     (delta) => {
       const len = mainAudios.length
@@ -255,26 +437,10 @@ function App() {
       } else {
         nextIndex = activeMainIndex < len - 1 ? activeMainIndex + 1 : 0
       }
-      if (nextIndex === activeMainIndex) return
-
-      clearMainNavTimers()
-      pendingMainNavRampUpRef.current = false
-      rampDownThenChangeTrack(nextIndex)
+      goToMainTrackWithRamp(nextIndex)
     },
-    [activeMainIndex, clearMainNavTimers, rampDownThenChangeTrack]
+    [activeMainIndex, goToMainTrackWithRamp]
   )
-
-  // Al hacer clic en el carrusel (cualquier pista, incluidos 08 y 12): mismo comportamiento, reproducir
-  const handleMainAudioChange = (index) => {
-    clearMainNavTimers()
-    pendingMainNavRampUpRef.current = false
-    mainNavRampActiveRef.current = false
-    setRampDisplayLevel(null)
-    setMainNavDucking(false)
-    setActiveMainIndex(index)
-    setShouldLoop(true)
-    setTimeout(() => setIsPlaying(true), 100)
-  }
 
   useEffect(() => {
     const handleKeyDown = (e) => {
@@ -317,25 +483,32 @@ function App() {
   }
 
   const anySecondaryPlaying = secondaryAudiosState.some(a => a.isPlaying)
-  const effectiveVolume = anySecondaryPlaying ? volume * 0.7 : volume
+  const effectiveVolume = clampVolume(
+    anySecondaryPlaying ? volume * SECONDARY_MAIN_VOLUME_FACTOR : volume,
+  )
   /** Durante rampas, el slider sigue el nivel real animado; si no, el efectivo habitual. */
-  const volumeSliderDisplay = rampDisplayLevel != null ? rampDisplayLevel : effectiveVolume
+  const volumeSliderDisplay = clampVolume(
+    rampDisplayLevel != null ? rampDisplayLevel : effectiveVolume,
+  )
   const volumeRangeMax = 1
 
   const handleVolumeChange = (newVolume) => {
-    setVolume(anySecondaryPlaying ? Math.min(1, newVolume / 0.7) : newVolume)
+    const n = clampVolume(newVolume)
+    setVolume(
+      anySecondaryPlaying ? clampVolume(n / SECONDARY_MAIN_VOLUME_FACTOR) : n,
+    )
   }
 
   const volumeControlTooltip =
     mainNavDucking && anySecondaryPlaying
-      ? 'Rampa de volumen al cambiar de pista; también reducido por secundario'
+      ? 'Rampa de volumen (2 s) y audio secundario activo'
       : mainNavDucking
-        ? 'Rampa de bajada y subida al cambiar de pista (2 s cada una)'
+        ? 'Rampa de volumen (2 s): cambio de pista, repetición o final de pista'
         : anySecondaryPlaying
-          ? 'Volumen reducido por audio secundario'
+          ? 'Audio secundario activo: volumen principal ajustado'
           : undefined
 
-  // --- TOGGLE SECUNDARIO: al dar PLAY bajar volumen principal 30%; secundarios al 100% ---
+  // --- TOGGLE SECUNDARIO: al dar PLAY principal al 50 % del slider; secundarios al 100% ---
   const handleSecondaryAudioToggle = useCallback((id) => {
     const toggled = secondaryAudiosState.find(a => a.id === id)
     const isStartingSecondary = toggled && !toggled.isPlaying
@@ -418,8 +591,7 @@ function App() {
         <AudioCarousel
           audios={mainAudios}
           activeIndex={activeMainIndex}
-          onAudioChange={handleMainAudioChange}
-          onNavigateMain={navigateMainWithCrossfade}
+          onNavigateToTrackWithRamp={goToMainTrackWithRamp}
           isMainNavTransitioning={mainNavDucking}
           isPlaying={isPlaying}
           currentTime={currentTime}

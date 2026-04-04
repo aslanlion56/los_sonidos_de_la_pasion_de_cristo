@@ -114,11 +114,10 @@ function AudioControls({
           />
         </div>
         <span
-          className="volume-display"
-          title={isVolumeReduced ? (volumeTooltip ?? 'Volumen reducido por audio secundario') : undefined}
+          className={`volume-display${isVolumeReduced ? ' volume-display--attenuated' : ''}`}
+          title={volumeTooltip || undefined}
         >
           {volumePercentLabel}%
-          {isVolumeReduced && <span className="volume-reduced-badge"> (reducido)</span>}
         </span>
       </div>
     </div>

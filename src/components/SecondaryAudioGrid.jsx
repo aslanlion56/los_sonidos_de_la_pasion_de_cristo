@@ -5,10 +5,7 @@ function SecondaryAudioGrid({ audios, onToggle, onVolumeChange, onSetRef, onVari
   return (
     <div className="secondary-audio-grid-container">
       <div className="grid-header">
-        <h2>
-          Audios Secundarios
-          <span className="grid-subtitle"> - Puedes reproducir varios simultáneamente</span>
-        </h2>
+        <h2>Audios Secundarios</h2>
       </div>
       
       <div className="secondary-audio-grid">

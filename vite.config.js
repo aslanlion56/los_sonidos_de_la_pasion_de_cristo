@@ -8,7 +8,10 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'audios/**/*.mp3'],
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.js',
+      includeAssets: ['favicon.svg'],
       manifest: {
         name: 'Sonidos de la Pasión de Cristo',
         short_name: 'Sonidos Pasión',
@@ -18,54 +21,22 @@ export default defineConfig({
           {
             src: 'favicon.svg',
             sizes: 'any',
-            type: 'image/svg+xml'
-          }
-        ]
-      },
-      workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png}'],
-        // Fallback de navegación: servir index.html para que la app funcione 100% offline
-        navigateFallback: '/index.html',
-        navigateFallbackAllowlist: [/^\/.*/],
-        runtimeCaching: [
-          {
-            // Respaldo si alguna petición no cae en el precache; MP3 suele ir con Range → 206
-            urlPattern: /\/audios\/.*\.mp3$/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'audios-cache',
-              expiration: { maxEntries: 60, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [200, 206] },
-              rangeRequests: true
-            }
+            type: 'image/svg+xml',
           },
-          {
-            // No interceptar documento (navegación); solo js, css, imágenes
-            urlPattern: ({ request }) =>
-              request.destination !== 'document' &&
-              /\.(?:js|css|svg|png|jpg|jpeg|gif|webp)$/.test(new URL(request.url).pathname),
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'static-resources',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 días
-              }
-            }
-          }
         ],
-        additionalManifestEntries: [
-          { url: '/index.html', revision: null }
-        ],
-        skipWaiting: true,
-        clientsClaim: true,
-        importScripts: []
       },
-      // Estrategia de actualización
+      injectManifest: {
+        injectionPoint: 'self.__WB_MANIFEST',
+        maximumFileSizeToCacheInBytes: 25 * 1024 * 1024,
+        globPatterns: ['**/*.{js,css,html,svg,png}', 'audios/**/*.mp3'],
+        additionalManifestEntries: [{ url: '/index.html', revision: null }],
+      },
+      // injectManifest + src/sw.js en ESM: en dev Vite puede servir el SW con `import`
+      // y el registro/HMR a veces lo trata como script clásico → "Cannot use import statement outside a module".
+      // En prod el SW se empaqueta bien; para probar PWA usa `npm run build && npm run preview`.
       devOptions: {
-        enabled: true,
-        type: 'module'
-      }
-    })
+        enabled: false,
+      },
+    }),
   ],
 })
