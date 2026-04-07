@@ -19,12 +19,12 @@ const getSafeAudioDuration = (audio) => {
   return 0
 }
 
-/** Tras rampa: nivel objetivo = 20 % del volumen efectivo base (tras ×0.5 si hay secundario). */
+/** Tras rampa: nivel objetivo = 20 % del volumen efectivo base (tras ×0.7 si hay secundario). */
 const MAIN_NAV_DUCK_FACTOR = 0.2
 /** Duración de la bajada gradual y de la subida gradual al cambiar de pista con Anterior/Siguiente. */
 const MAIN_NAV_RAMP_MS = 2000
-/** Con secundario sonando, el principal usa este factor del volumen del slider (0.5 = 50 %). */
-const SECONDARY_MAIN_VOLUME_FACTOR = 0.5
+/** Con secundario sonando, el principal usa este factor del volumen del slider (0.7 = 70 %). */
+const SECONDARY_MAIN_VOLUME_FACTOR = 0.7
 
 /** HTMLMediaElement.volume solo admite [0, 1]; las rampas y floats pueden pasarse ligeramente. */
 const clampVolume = (x) => {
@@ -363,7 +363,7 @@ function App() {
     startRampUpAnimation,
   ])
 
-  // --- VOLUMEN del principal: secundarios ×0.5 (sin rampa manual encima).
+  // --- VOLUMEN del principal: secundarios ×0.7 (sin rampa manual encima).
   useEffect(() => {
     if (mainNavRampActiveRef.current || preEndDuckRef.current) return
     applyMainAudioElementVolume()
