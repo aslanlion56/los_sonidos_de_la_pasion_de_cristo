@@ -1,28 +1,73 @@
 {
   "name": "sonidos-de-la-pasion",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.27.0",
   "type": "module",
+  "main": "electron/main.cjs",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "build:native": "cross-env BUILD_NATIVE=1 vite build",
     "preview": "vite preview",
     "normalize-audio": "node scripts/normalize-audio.js",
     "firebase:login": "npx firebase-tools login",
     "firebase:init": "npx firebase-tools init hosting",
     "firebase:deploy": "node scripts/bump-version.js && npm run build && npx firebase-tools deploy --only hosting",
-    "firebase:deploy:hosting": "npx firebase-tools deploy --only hosting"
+    "firebase:deploy:hosting": "npx firebase-tools deploy --only hosting",
+    "electron:dev": "node scripts/generate-electron-icon.mjs && npm run build:native && electron .",
+    "native:assets": "node scripts/generate-electron-icon.mjs && npx @capacitor/assets generate --android --assetPath assets --iconBackgroundColor \"#ae0714\" --iconBackgroundColorDark \"#ae0714\" --splashBackgroundColor \"#ae0714\" --splashBackgroundColorDark \"#ae0714\"",
+    "electron:pack:win": "npm run native:assets && npm run build:native && node scripts/electron-win-release.mjs",
+    "cap:sync": "npm run native:assets && npm run build:native && npx cap sync",
+    "cap:open:android": "npx cap open android",
+    "android:apk:debug": "npm run cap:sync && cd android && ./gradlew assembleDebug"
   },
   "dependencies": {
+    "@capacitor/android": "^6.2.0",
+    "@capacitor/core": "^6.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-icons": "^4.12.0"
   },
   "devDependencies": {
+    "@capacitor/assets": "^3.0.5",
+    "@capacitor/cli": "^6.2.0",
     "@types/react": "^18.2.43",
     "@types/react-dom": "^18.2.17",
     "@vitejs/plugin-react": "^4.2.1",
+    "cross-env": "^7.0.3",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "sharp": "^0.34.5",
     "vite": "^5.0.8",
     "vite-plugin-pwa": "^0.19.0"
+  },
+  "build": {
+    "appId": "com.nuevavida.sonidosdelapasion",
+    "productName": "Sonidos de la Pasión",
+    "icon": "build/icon.png",
+    "artifactName": "sonidos_de_la_pasion-${version}.${ext}",
+    "copyright": "Copyright © NUEVA VIDA ICB",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true
+    }
   }
 }

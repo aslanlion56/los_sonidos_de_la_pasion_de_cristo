@@ -32,6 +32,11 @@ dist-ssr
 # Build outputs
 build
 .cache
+release
+
+# Binarios de app (no subir a Hosting en Spark ni versionar en git)
+public/*.exe
+public/*.apk
 
 # Firebase
 .firebaserc

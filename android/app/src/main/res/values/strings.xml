@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Sonidos de la Pasión</string>
+    <string name="title_activity_main">Sonidos de la Pasión</string>
+    <string name="package_name">com.nuevavida.sonidosdelapasion</string>
+    <string name="custom_url_scheme">com.nuevavida.sonidosdelapasion</string>
+</resources>

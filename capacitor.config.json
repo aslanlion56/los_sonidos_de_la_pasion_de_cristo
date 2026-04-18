@@ -1,0 +1,11 @@
+{
+  "appId": "com.nuevavida.sonidosdelapasion",
+  "appName": "Sonidos de la Pasión",
+  "webDir": "dist",
+  "android": {
+    "allowMixedContent": true
+  },
+  "server": {
+    "androidScheme": "https"
+  }
+}
