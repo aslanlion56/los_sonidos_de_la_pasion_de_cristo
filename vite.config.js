@@ -19,7 +19,7 @@ export default defineConfig({
             filename: 'sw.js',
             includeAssets: ['favicon.svg'],
             manifest: {
-              name: 'Sonidos de la Pasión de Cristo',
+              name: 'Los sonidos de la pasión de Cristo',
               short_name: 'Sonidos Pasión',
               description: 'Landing page de audios de la Pasión de Cristo',
               theme_color: '#ae0714',
@@ -34,7 +34,13 @@ export default defineConfig({
             injectManifest: {
               injectionPoint: 'self.__WB_MANIFEST',
               maximumFileSizeToCacheInBytes: 25 * 1024 * 1024,
-              globPatterns: ['**/*.{js,css,html,svg,png}', 'audios/**/*.mp3'],
+              globPatterns: [
+                '**/*.{js,css,html,svg,png}',
+                'audios/**/*.mp3',
+                'audios_volumen_10/**/*.mp3',
+                'audios_volumen_15/**/*.mp3',
+                'audios_volumen_20/**/*.mp3',
+              ],
               additionalManifestEntries: [{ url: 'index.html', revision: null }],
             },
             devOptions: {

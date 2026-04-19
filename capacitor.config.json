@@ -1,6 +1,6 @@
 {
   "appId": "com.nuevavida.sonidosdelapasion",
-  "appName": "Sonidos de la Pasión",
+  "appName": "Los sonidos de la pasión de Cristo",
   "webDir": "dist",
   "android": {
     "allowMixedContent": true

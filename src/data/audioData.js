@@ -18,25 +18,21 @@ export const mainAudios = [
   { id: 12, name: "12- Resurrection", src: publicUrl('/audios/12- Resurrection.mp3') },
 ]
 
-// Cortos: Puerta y Gallo tienen varias variantes en la misma tarjeta; el resto un solo src.
+// Cortos: un solo src por tarjeta. Puerta y Gallo usan solo la variante 1 (01- / 03-); otros MP3 en disco no se borran.
 // Via Dolorosa está solo en principales, no aquí.
 export const secondaryAudios = [
   {
     id: 1,
     name: 'Puerta',
     icon: 'door',
-    variants: [publicUrl('/audios/cortos/01- Puerta.mp3'), publicUrl('/audios/cortos/01.1- Puerta.mp3')],
+    src: publicUrl('/audios/cortos/01- Puerta.mp3'),
   },
   { id: 2, name: 'Fogata', icon: 'fire', src: publicUrl('/audios/cortos/02- Fogata.mp3') },
   {
     id: 3,
     name: 'Gallo',
     icon: 'rooster',
-    variants: [
-      publicUrl('/audios/cortos/03- Gallo.mp3'),
-      publicUrl('/audios/cortos/03.1- Gallo.mp3'),
-      publicUrl('/audios/cortos/03.2- Gallo.mp3'),
-    ],
+    src: publicUrl('/audios/cortos/03- Gallo.mp3'),
   },
   { id: 4, name: 'Tormenta', icon: 'thunder', src: publicUrl('/audios/cortos/04- Tormenta.mp3') },
   { id: 5, name: 'Tierra temblando', icon: 'earthquake', src: publicUrl('/audios/cortos/05- Tierra temblando.mp3') },

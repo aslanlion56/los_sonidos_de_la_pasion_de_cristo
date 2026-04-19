@@ -1,7 +1,11 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
+import { useState, useRef, useEffect, useLayoutEffect, useCallback, useMemo } from 'react'
 import AudioCarousel from './components/AudioCarousel'
 import SecondaryAudioGrid from './components/SecondaryAudioGrid'
 import { mainAudios, secondaryAudios } from './data/audioData'
+import {
+  audioSrcForVolumeFolder,
+  AUDIO_VOLUME_FOLDER_MID,
+} from './utils/audioVolumeFolder'
 import logo from './assets/icons/Los_Sonidos_de_la_Pasion.png'
 import logoFooter from './assets/logo.png'
 import versionData from './version.json'
@@ -33,6 +37,20 @@ const clampVolume = (x) => {
   return Math.min(1, Math.max(0, n))
 }
 
+const DEFAULT_AUDIO_VOLUME_FOLDER = AUDIO_VOLUME_FOLDER_MID
+
+function buildSecondaryState(folder) {
+  return secondaryAudios.map((audio) => ({
+    ...audio,
+    src: audio.src ? audioSrcForVolumeFolder(audio.src, folder) : undefined,
+    variants: audio.variants?.map((v) => audioSrcForVolumeFolder(v, folder)),
+    isPlaying: false,
+    volume: 1,
+    audioRef: null,
+    ...(audio.variants && { selectedVariantIndex: 0 }),
+  }))
+}
+
 function App() {
   const [activeMainIndex, setActiveMainIndex] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -61,6 +79,17 @@ function App() {
   const shouldLoopRef = useRef(true)
   /** Últimos 2 s: duck activo (no repetir pista 12). */
   const preEndDuckRef = useRef(false)
+
+  const [audioVolumeFolder, setAudioVolumeFolder] = useState(DEFAULT_AUDIO_VOLUME_FOLDER)
+
+  const mainAudiosResolved = useMemo(
+    () =>
+      mainAudios.map((a) => ({
+        ...a,
+        src: audioSrcForVolumeFolder(a.src, audioVolumeFolder),
+      })),
+    [audioVolumeFolder],
+  )
 
   useEffect(() => {
     activeMainIndexRef.current = activeMainIndex
@@ -101,15 +130,27 @@ function App() {
     }
   }, [cancelRampAnimation, cancelPreEndRaf])
 
-  const [secondaryAudiosState, setSecondaryAudiosState] = useState(
-    secondaryAudios.map(audio => ({
-      ...audio,
-      isPlaying: false,
-      volume: 1,
-      audioRef: null,
-      ...(audio.variants && { selectedVariantIndex: 0 })
-    }))
+  const [secondaryAudiosState, setSecondaryAudiosState] = useState(() =>
+    buildSecondaryState(DEFAULT_AUDIO_VOLUME_FOLDER),
   )
+
+  /** Misma carpeta de volumen en secundarios y principal: pausa y estado limpio antes de useEffect (evita play() con isPlaying aún true). */
+  useLayoutEffect(() => {
+    setSecondaryAudiosState(buildSecondaryState(audioVolumeFolder))
+    secondaryPlayingCountRef.current = 0
+    setIsPlaying(false)
+    if (mainNavTimerRef.current) {
+      clearTimeout(mainNavTimerRef.current)
+      mainNavTimerRef.current = null
+    }
+    cancelRampAnimation()
+    cancelPreEndRaf()
+    preEndDuckRef.current = false
+    mainNavRampActiveRef.current = false
+    pendingMainNavRampUpRef.current = false
+    setRampDisplayLevel(null)
+    setMainNavDucking(false)
+  }, [audioVolumeFolder, cancelRampAnimation, cancelPreEndRaf])
 
   const applyMainAudioElementVolume = useCallback(() => {
     const el = mainAudioRef.current ?? document.querySelector('audio[data-main-audio]')
@@ -356,6 +397,7 @@ function App() {
     }
   }, [
     activeMainIndex,
+    audioVolumeFolder,
     shouldLoop,
     cancelPreEndRaf,
     getBaseEffectiveVolume,
@@ -378,9 +420,9 @@ function App() {
     } else {
       audio.pause()
     }
-  }, [isPlaying, activeMainIndex])
+  }, [isPlaying, activeMainIndex, audioVolumeFolder])
 
-  // --- Cargar pista al cambiar de principal ---
+  // --- Cargar pista al cambiar de principal o carpeta de volumen (mismo índice, nuevo src) ---
   useEffect(() => {
     const audio = mainAudioRef.current
     if (!audio) return
@@ -404,7 +446,7 @@ function App() {
       applyMainAudioElementVolume()
     }
     return () => audio.removeEventListener('canplay', onCanPlay)
-  }, [activeMainIndex, applyMainAudioElementVolume, getBaseEffectiveVolume, startRampUpAnimation])
+  }, [activeMainIndex, audioVolumeFolder, applyMainAudioElementVolume, getBaseEffectiveVolume, startRampUpAnimation])
 
   const clearMainNavTimers = useCallback(() => {
     if (mainNavTimerRef.current) {
@@ -579,17 +621,18 @@ function App() {
         <img src={logo} alt="Los Sonidos de la Pasión de Cristo" className="header-logo" />
       </header>
       <main className="app-main">
-        {mainAudios[activeMainIndex] && (
+        {mainAudiosResolved[activeMainIndex] && (
           <audio
+            key={audioVolumeFolder}
             ref={mainAudioRef}
             data-main-audio
-            src={mainAudios[activeMainIndex].src}
+            src={mainAudiosResolved[activeMainIndex].src}
             preload="metadata"
             style={{ display: 'none' }}
           />
         )}
         <AudioCarousel
-          audios={mainAudios}
+          audios={mainAudiosResolved}
           activeIndex={activeMainIndex}
           onNavigateToTrackWithRamp={goToMainTrackWithRamp}
           isMainNavTransitioning={mainNavDucking}
@@ -604,6 +647,8 @@ function App() {
           onPlayPause={handlePlayPause}
           onTimeChange={handleTimeChange}
           onVolumeChange={handleVolumeChange}
+          audioVolumeFolder={audioVolumeFolder}
+          onAudioVolumeFolderChange={setAudioVolumeFolder}
         />
         <SecondaryAudioGrid
           audios={secondaryAudiosState}

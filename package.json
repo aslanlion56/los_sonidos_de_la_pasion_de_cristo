@@ -10,6 +10,9 @@
     "build:native": "cross-env BUILD_NATIVE=1 vite build",
     "preview": "vite preview",
     "normalize-audio": "node scripts/normalize-audio.js",
+    "normalize-audio:10": "node scripts/normalize-audio.js --target -10",
+    "normalize-audio:15": "node scripts/normalize-audio.js --target -15",
+    "audio-levels": "node scripts/generate-audio-levels.js",
     "firebase:login": "npx firebase-tools login",
     "firebase:init": "npx firebase-tools init hosting",
     "firebase:deploy": "node scripts/bump-version.js && npm run build && npx firebase-tools deploy --only hosting",
@@ -43,7 +46,7 @@
   },
   "build": {
     "appId": "com.nuevavida.sonidosdelapasion",
-    "productName": "Sonidos de la Pasión",
+    "productName": "Los sonidos de la pasión de Cristo",
     "icon": "build/icon.png",
     "artifactName": "sonidos_de_la_pasion-${version}.${ext}",
     "copyright": "Copyright © NUEVA VIDA ICB",

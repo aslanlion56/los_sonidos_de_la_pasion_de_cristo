@@ -1,5 +1,11 @@
 import { useRef, useEffect } from 'react'
+import { FaVolumeDown, FaVolumeUp } from 'react-icons/fa'
 import AudioControls from './AudioControls'
+import {
+  AUDIO_VOLUME_FOLDER_LOUD,
+  AUDIO_VOLUME_FOLDER_MID,
+  AUDIO_VOLUME_FOLDER_SOFT,
+} from '../utils/audioVolumeFolder'
 
 function AudioCarousel({
   audios,
@@ -17,7 +23,9 @@ function AudioCarousel({
   onPlayPause,
   onTimeChange,
   onVolumeChange,
-  playPauseButtonRef
+  playPauseButtonRef,
+  audioVolumeFolder,
+  onAudioVolumeFolderChange,
 }) {
   const carouselRef = useRef(null)
 
@@ -50,8 +58,44 @@ function AudioCarousel({
 
   return (
     <div className="audio-carousel-container">
-      <div className="carousel-header">
+      <div className="carousel-header carousel-header--with-volume">
         <h2>Audios Principales</h2>
+        <div
+          className="carousel-volume-preset"
+          role="group"
+          aria-label="Nivel de volumen de los archivos de audio"
+        >
+          <button
+            type="button"
+            className={`carousel-volume-preset__btn ${audioVolumeFolder === AUDIO_VOLUME_FOLDER_SOFT ? 'is-selected' : ''}`}
+            onClick={() => onAudioVolumeFolderChange?.(AUDIO_VOLUME_FOLDER_SOFT)}
+            aria-pressed={audioVolumeFolder === AUDIO_VOLUME_FOLDER_SOFT}
+            aria-label="Mezcla más suave, archivos aproximadamente -20 LUFS"
+            title="Archivos -20 LUFS (más suave)"
+          >
+            <FaVolumeDown className="carousel-volume-preset__icon carousel-volume-preset__icon--sm" aria-hidden />
+          </button>
+          <button
+            type="button"
+            className={`carousel-volume-preset__btn ${audioVolumeFolder === AUDIO_VOLUME_FOLDER_MID ? 'is-selected' : ''}`}
+            onClick={() => onAudioVolumeFolderChange?.(AUDIO_VOLUME_FOLDER_MID)}
+            aria-pressed={audioVolumeFolder === AUDIO_VOLUME_FOLDER_MID}
+            aria-label="Mezcla intermedia, archivos aproximadamente -15 LUFS"
+            title="Archivos -15 LUFS (intermedio)"
+          >
+            <FaVolumeUp className="carousel-volume-preset__icon carousel-volume-preset__icon--md" aria-hidden />
+          </button>
+          <button
+            type="button"
+            className={`carousel-volume-preset__btn ${audioVolumeFolder === AUDIO_VOLUME_FOLDER_LOUD ? 'is-selected' : ''}`}
+            onClick={() => onAudioVolumeFolderChange?.(AUDIO_VOLUME_FOLDER_LOUD)}
+            aria-pressed={audioVolumeFolder === AUDIO_VOLUME_FOLDER_LOUD}
+            aria-label="Mezcla más alta, archivos aproximadamente -10 LUFS"
+            title="Archivos -10 LUFS (más volumen)"
+          >
+            <FaVolumeUp className="carousel-volume-preset__icon carousel-volume-preset__icon--lg" aria-hidden />
+          </button>
+        </div>
       </div>
 
       <div className="carousel-wrapper">

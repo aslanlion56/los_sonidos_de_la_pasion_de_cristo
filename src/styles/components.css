@@ -7,11 +7,75 @@
   margin-bottom: 0.5rem;
 }
 
+.carousel-header--with-volume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 0.75rem;
+}
+
+.carousel-volume-preset {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.carousel-volume-preset__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.4rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  line-height: 0;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+.carousel-volume-preset__btn:hover:not(.is-selected) {
+  color: var(--text-primary);
+  border-color: var(--surface-light);
+}
+
+.carousel-volume-preset__btn.is-selected {
+  color: var(--success);
+  border-color: var(--success);
+  background: rgba(16, 185, 129, 0.14);
+}
+
+.carousel-volume-preset__btn:focus-visible {
+  outline: 2px solid var(--success);
+  outline-offset: 2px;
+}
+
+.carousel-volume-preset__icon--sm {
+  font-size: 1.05rem;
+}
+
+.carousel-volume-preset__icon--md {
+  font-size: 1.28rem;
+}
+
+.carousel-volume-preset__icon--lg {
+  font-size: 1.55rem;
+}
+
 .carousel-header h2 {
   font-size: 1.3rem;
   font-weight: 600;
   color: var(--text-primary);
   margin-bottom: 0.25rem;
+}
+
+.carousel-header--with-volume h2 {
+  margin-bottom: 0;
 }
 
 /* Navegación aparte: solo anterior/siguiente con rampa de volumen (iconos). */
@@ -1048,4 +1112,120 @@ input[type="range"]::-moz-range-track {
 .volume-slider::-moz-range-thumb:hover {
   transform: scale(1.2);
   background: var(--primary-color);
+}
+
+/* ===== INVENTARIO /audios (solo URL) ===== */
+.audios-inventory {
+  min-height: 100vh;
+  padding: 1.25rem 1.5rem 2rem;
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.audios-inventory__header {
+  margin-bottom: 1.75rem;
+}
+
+.audios-inventory__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.5rem;
+}
+
+.audios-inventory__meta,
+.audios-inventory__note {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-bottom: 0.5rem;
+  line-height: 1.5;
+}
+
+.audios-inventory__meta a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.audios-inventory__meta a:hover {
+  color: var(--text-primary);
+}
+
+.audios-inventory__note {
+  margin-bottom: 0;
+}
+
+.audios-inventory__code {
+  font-family: ui-monospace, monospace;
+  font-size: 0.8125rem;
+  background: var(--surface);
+  padding: 0.15rem 0.4rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.audios-inventory__section {
+  margin-bottom: 2rem;
+}
+
+.audios-inventory__h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.audios-inventory__table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.audios-inventory__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+}
+
+.audios-inventory__table th,
+.audios-inventory__table td {
+  padding: 0.65rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.audios-inventory__table th {
+  font-weight: 600;
+  color: var(--text-secondary);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.audios-inventory__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.audios-inventory__table tbody tr:hover td {
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.audios-inventory__lufs {
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.audios-inventory__table--wide th:nth-child(n + 2),
+.audios-inventory__table--wide td:nth-child(n + 2) {
+  font-size: 0.82rem;
+  text-align: right;
+}
+
+.audios-inventory__table--wide th:nth-child(1),
+.audios-inventory__table--wide td:nth-child(1) {
+  min-width: 6.5rem;
+  white-space: nowrap;
+}
+
+.audios-inventory__table--wide th:nth-child(n + 2) {
+  min-width: 4.5rem;
 }
