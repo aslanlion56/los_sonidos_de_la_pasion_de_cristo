@@ -16,10 +16,22 @@ function AudioCard({ audio, currentSrc, isPlaying, volume, onToggle, onVolumeCha
 
   // Al cambiar de variante, actualizar src del elemento de audio
   useEffect(() => {
-    if (audioRef.current && currentSrc) {
-      audioRef.current.src = currentSrc
-      audioRef.current.load()
+    const el = audioRef.current
+    if (!el || !currentSrc) return
+
+    // Reset explícito para Android: evita continuar a mitad de pista
+    // cuando cambia el preset de volumen (carpeta 10/15/20).
+    try {
+      el.pause()
+      el.currentTime = 0
+    } catch {
+      // noop
     }
+
+    el.src = currentSrc
+    el.load()
+    setCurrentTime(0)
+    setDuration(0)
   }, [currentSrc])
 
   useEffect(() => {

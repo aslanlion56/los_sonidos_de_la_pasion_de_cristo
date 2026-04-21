@@ -9,6 +9,7 @@ import {
 import logo from './assets/icons/Los_Sonidos_de_la_Pasion.png'
 import logoFooter from './assets/logo.png'
 import versionData from './version.json'
+import { MAIN_NAV_RAMP_MS, MAIN_VOLUME_RAMP_SEC } from './constants/audioRamp'
 import './styles/components.css'
 
 const getSafeAudioDuration = (audio) => {
@@ -25,8 +26,6 @@ const getSafeAudioDuration = (audio) => {
 
 /** Tras rampa: nivel objetivo = 20 % del volumen efectivo base (tras ×0.7 si hay secundario). */
 const MAIN_NAV_DUCK_FACTOR = 0.2
-/** Duración de la bajada gradual y de la subida gradual al cambiar de pista con Anterior/Siguiente. */
-const MAIN_NAV_RAMP_MS = 2000
 /** Con secundario sonando, el principal usa este factor del volumen del slider (0.7 = 70 %). */
 const SECONDARY_MAIN_VOLUME_FACTOR = 0.7
 
@@ -68,16 +67,16 @@ function App() {
   /** Tras bajar en rampa, al cargar la nueva pista hay que subir en rampa desde el 20 %. */
   const pendingMainNavRampUpRef = useRef(false)
   const rampRafRef = useRef(null)
-  /** Pre-fin (últimos 2 s): animación del volumen a ~60 fps, misma fluidez que rampDownThenChangeTrack. */
+  /** Pre-fin (último 1 s): animación del volumen a ~60 fps, misma fluidez que rampDownThenChangeTrack. */
   const preEndRafRef = useRef(null)
   const preEndRafRunningRef = useRef(false)
   /** Nivel de salida actual del principal (0…1); se anima en rampa para que el slider refleje el movimiento. */
   const [rampDisplayLevel, setRampDisplayLevel] = useState(null)
-  /** True durante rampas manuales, subida tras loop, o últimos 2 s antes del final (pre-fin). */
+  /** True durante rampas manuales, subida tras loop, o último 1 s antes del final (pre-fin). */
   const [mainNavDucking, setMainNavDucking] = useState(false)
   const activeMainIndexRef = useRef(0)
   const shouldLoopRef = useRef(true)
-  /** Últimos 2 s: duck activo (no repetir pista 12). */
+  /** Último 1 s: duck activo (no repetir pista 12). */
   const preEndDuckRef = useRef(false)
 
   const [audioVolumeFolder, setAudioVolumeFolder] = useState(DEFAULT_AUDIO_VOLUME_FOLDER)
@@ -136,7 +135,21 @@ function App() {
 
   /** Misma carpeta de volumen en secundarios y principal: pausa y estado limpio antes de useEffect (evita play() con isPlaying aún true). */
   useLayoutEffect(() => {
-    setSecondaryAudiosState(buildSecondaryState(audioVolumeFolder))
+    setSecondaryAudiosState((prev) => {
+      // En Android WebView, al cambiar src de secundarios conviene forzar stop/reset
+      // para evitar que mantengan posición interna del audio anterior.
+      prev.forEach((audio) => {
+        const el = audio.audioRef
+        if (!el) return
+        try {
+          el.pause()
+          el.currentTime = 0
+        } catch {
+          // noop: algunos dispositivos pueden lanzar en estados transitorios.
+        }
+      })
+      return buildSecondaryState(audioVolumeFolder)
+    })
     secondaryPlayingCountRef.current = 0
     setIsPlaying(false)
     if (mainNavTimerRef.current) {
@@ -181,7 +194,8 @@ function App() {
     el.volume = clampVolume(v0)
     setRampDisplayLevel(clampVolume(v0))
     const t0 = performance.now()
-    const step = (now) => {
+    const step = () => {
+      const now = performance.now()
       const u = Math.min(1, (now - t0) / MAIN_NAV_RAMP_MS)
       const level = clampVolume(v0 + (v1 - v0) * u)
       el.volume = level
@@ -208,7 +222,8 @@ function App() {
       const v0 = clampVolume(getBaseEffectiveVolume())
       const v1 = v0 * MAIN_NAV_DUCK_FACTOR
       const t0 = performance.now()
-      const step = (now) => {
+      const step = () => {
+        const now = performance.now()
         const u = Math.min(1, (now - t0) / MAIN_NAV_RAMP_MS)
         const level = clampVolume(v0 + (v1 - v0) * u)
         el.volume = level
@@ -228,7 +243,7 @@ function App() {
     [cancelRampAnimation, cancelPreEndRaf, getBaseEffectiveVolume]
   )
 
-  // --- EVENTOS del audio principal: timeupdate (pre-fin 2 s) + ended ---
+  // --- EVENTOS del audio principal: timeupdate (pre-fin 1 s) + ended ---
   useEffect(() => {
     const audio = mainAudioRef.current
     if (!audio) return
@@ -255,7 +270,7 @@ function App() {
       }
 
       const remaining = Math.max(0, dur - t)
-      const windowSec = Math.min(2, dur)
+      const windowSec = Math.min(MAIN_VOLUME_RAMP_SEC, dur)
       const inPreEndWindow =
         dur > 0 &&
         t >= dur - windowSec - 0.001 &&
@@ -282,7 +297,7 @@ function App() {
             const i = activeMainIndexRef.current
             const trackId = mainAudios[i]?.id
             const rem = Math.max(0, d - ct)
-            const ws = Math.min(2, d)
+            const ws = Math.min(MAIN_VOLUME_RAMP_SEC, d)
             const inWin =
               d > 0 &&
               ct >= d - ws - 0.001 &&
@@ -458,7 +473,7 @@ function App() {
     preEndDuckRef.current = false
   }, [cancelRampAnimation, cancelPreEndRaf])
 
-  /** Carrusel (flechas y tarjetas): misma rampa 2 s + cambio + subida. */
+  /** Carrusel (flechas y tarjetas): misma rampa 1 s + cambio + subida. */
   const goToMainTrackWithRamp = useCallback(
     (nextIndex) => {
       if (nextIndex === activeMainIndex) return
@@ -543,9 +558,9 @@ function App() {
 
   const volumeControlTooltip =
     mainNavDucking && anySecondaryPlaying
-      ? 'Rampa de volumen (2 s) y audio secundario activo'
+      ? 'Rampa de volumen (1 s) y audio secundario activo'
       : mainNavDucking
-        ? 'Rampa de volumen (2 s): cambio de pista, repetición o final de pista'
+        ? 'Rampa de volumen (1 s): cambio de pista, repetición o final de pista'
         : anySecondaryPlaying
           ? 'Audio secundario activo: volumen principal ajustado'
           : undefined
