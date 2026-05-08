@@ -33,13 +33,8 @@ export default defineConfig({
             },
             injectManifest: {
               injectionPoint: 'self.__WB_MANIFEST',
-              maximumFileSizeToCacheInBytes: 25 * 1024 * 1024,
               globPatterns: [
                 '**/*.{js,css,html,svg,png}',
-                'audios/**/*.mp3',
-                'audios_volumen_12/**/*.mp3',
-                'audios_volumen_15/**/*.mp3',
-                'audios_volumen_20/**/*.mp3',
               ],
               additionalManifestEntries: [{ url: 'index.html', revision: null }],
             },
