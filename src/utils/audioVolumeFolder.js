@@ -1,5 +1,5 @@
 /** Carpeta en `public/` con MP3 normalizados a ~-10 LUFS (más volumen). */
-export const AUDIO_VOLUME_FOLDER_LOUD = 'audios_volumen_10'
+export const AUDIO_VOLUME_FOLDER_LOUD = 'audios_volumen_12'
 /** Carpeta en `public/` con MP3 normalizados a ~-15 LUFS (intermedio). */
 export const AUDIO_VOLUME_FOLDER_MID = 'audios_volumen_15'
 /** Carpeta en `public/` con MP3 normalizados a ~-20 LUFS (más suave). */

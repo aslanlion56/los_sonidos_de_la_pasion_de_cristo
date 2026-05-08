@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Mide LUFS integrado (input_i de loudnorm) en paralelo para cada carpeta:
- *   public/audios, audios_comprimidos, audios_volumen_10, audios_volumen_15, audios_volumen_20
+ *   public/audios, audios_comprimidos, audios_volumen_12, audios_volumen_15, audios_volumen_20
  * y escribe src/data/audioLevels.json con byTrack[ "audios/…" ] → { audios, audios_comprimidos, … }.
  *
  * Requiere: ffmpeg
@@ -21,7 +21,7 @@ const OUT_FILE = join(__dirname, '..', 'src', 'data', 'audioLevels.json')
 const SOURCES = [
   { prop: 'audios', subdir: 'audios' },
   { prop: 'audios_comprimidos', subdir: 'audios_comprimidos' },
-  { prop: 'audios_volumen_10', subdir: 'audios_volumen_10' },
+  { prop: 'audios_volumen_12', subdir: 'audios_volumen_12' },
   { prop: 'audios_volumen_15', subdir: 'audios_volumen_15' },
   { prop: 'audios_volumen_20', subdir: 'audios_volumen_20' },
 ]
@@ -62,7 +62,7 @@ function canonicalKey(relInsideTree) {
 
 function main() {
   console.log(
-    'Midiendo LUFS en: audios, audios_comprimidos, audios_volumen_10, audios_volumen_15, audios_volumen_20\n',
+    'Midiendo LUFS en: audios, audios_comprimidos, audios_volumen_12, audios_volumen_15, audios_volumen_20\n',
   )
 
   const byTrack = {}

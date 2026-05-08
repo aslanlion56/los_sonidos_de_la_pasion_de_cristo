@@ -6,7 +6,7 @@ const distDir = join(root, 'dist')
 const dataFile = join(root, 'src', 'data', 'audioData.js')
 
 const KEEP_VOLUME_DIRS = new Set([
-  'audios_volumen_10',
+  'audios_volumen_12',
   'audios_volumen_15',
   'audios_volumen_20',
 ])

@@ -3,7 +3,7 @@
  * Normaliza un MP3 a un LUFS integrado objetivo (misma cadena que normalize-audio.js).
  *
  * Uso:
- *   node scripts/normalize-single-file.js --in public/audios/foo.mp3 --out public/audios_volumen_10/foo.mp3 --target -10
+ *   node scripts/normalize-single-file.js --in public/audios/foo.mp3 --out public/audios_volumen_12/foo.mp3 --target -12
  */
 
 import { spawnSync } from 'child_process'
@@ -42,7 +42,7 @@ function parseArgs() {
   }
   if (!input || !output || !Number.isFinite(targetI)) {
     console.error(
-      'Uso: --in <ruta entrada> --out <ruta salida> --target <-10|-20> [--tp <-1.5 techo dBTP>]',
+      'Uso: --in <ruta entrada> --out <ruta salida> --target <-12|-20> [--tp <-1.5 techo dBTP>]',
     )
     process.exit(1)
   }

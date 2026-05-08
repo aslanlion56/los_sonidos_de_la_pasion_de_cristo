@@ -18,7 +18,7 @@ function sortValueFromTrack(track) {
   if (Number.isFinite(a)) return a
   const vals = [
     track.audios_comprimidos,
-    track.audios_volumen_10,
+    track.audios_volumen_12,
     track.audios_volumen_15,
     track.audios_volumen_20,
   ].filter(Number.isFinite)
@@ -32,7 +32,7 @@ function Row({ label, track }) {
       <td>{label}</td>
       <td className="audios-inventory__lufs">{formatLevel(track?.audios)}</td>
       <td className="audios-inventory__lufs">{formatLevel(track?.audios_comprimidos)}</td>
-      <td className="audios-inventory__lufs">{formatLevel(track?.audios_volumen_10)}</td>
+      <td className="audios-inventory__lufs">{formatLevel(track?.audios_volumen_12)}</td>
       <td className="audios-inventory__lufs">{formatLevel(track?.audios_volumen_15)}</td>
       <td className="audios-inventory__lufs">{formatLevel(track?.audios_volumen_20)}</td>
     </tr>
@@ -117,8 +117,8 @@ export default function AudiosInventory() {
         <th scope="col" title="public/audios_comprimidos/">
           Audios comprimidos (LUFS)
         </th>
-        <th scope="col" title="public/audios_volumen_10/">
-          Volumen 10 (LUFS)
+        <th scope="col" title="public/audios_volumen_12/">
+          Volumen 12 (LUFS)
         </th>
         <th scope="col" title="public/audios_volumen_15/">
           Volumen 15 (LUFS)

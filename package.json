@@ -11,7 +11,7 @@
     "native:prune-dist": "node scripts/prune-native-dist.mjs",
     "preview": "vite preview",
     "normalize-audio": "node scripts/normalize-audio.js",
-    "normalize-audio:10": "node scripts/normalize-audio.js --target -10",
+    "normalize-audio:12": "node scripts/normalize-audio.js --target -12",
     "normalize-audio:15": "node scripts/normalize-audio.js --target -15",
     "audio-levels": "node scripts/generate-audio-levels.js",
     "firebase:login": "npx firebase-tools login",
@@ -44,7 +44,7 @@
     "electron-builder": "^25.1.8",
     "sharp": "^0.34.5",
     "vite": "^5.0.8",
-    "vite-plugin-pwa": "^0.19.0"
+    "vite-plugin-pwa": "^1.2.0"
   },
   "build": {
     "appId": "com.nuevavida.sonidosdelapasion",

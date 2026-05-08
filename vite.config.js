@@ -37,7 +37,7 @@ export default defineConfig({
               globPatterns: [
                 '**/*.{js,css,html,svg,png}',
                 'audios/**/*.mp3',
-                'audios_volumen_10/**/*.mp3',
+                'audios_volumen_12/**/*.mp3',
                 'audios_volumen_15/**/*.mp3',
                 'audios_volumen_20/**/*.mp3',
               ],

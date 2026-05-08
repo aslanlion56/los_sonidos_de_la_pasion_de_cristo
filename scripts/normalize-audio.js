@@ -17,7 +17,7 @@
  *
  * npm:
  *   npm run normalize-audio          → -20 LUFS → public/audios_volumen_20/
- *   npm run normalize-audio:10       → -10 LUFS → public/audios_volumen_10/
+ *   npm run normalize-audio:12       → -12 LUFS → public/audios_volumen_12/
  *   npm run normalize-audio:15       → -15 LUFS → public/audios_volumen_15/
  */
 
