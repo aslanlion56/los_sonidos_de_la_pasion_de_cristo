@@ -1,5 +1,15 @@
+# Dependencias
+node_modules/
+
+# Build / bundlers
+dist/
+dist-ssr/
+build/
+.cache/
+.vite/
+
 # Logs
-logs
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,39 +17,61 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Variables de entorno (mantener .env.example como plantilla)
+.env
+.env.*
+!.env.example
 
-# Editor directories and files
+# Apps nativas (Electron / Capacitor) — instaladores y builds generados
+release/
+dev-dist/
+*.exe
+*.apk
+*.aab
+*.blockmap
+public/*.exe
+public/*.apk
+public/*.aab
+android/app/build/
+android/.gradle/
+android/local.properties
+android/capacitor-cordova-android-plugins/
+android/app/src/main/assets/public
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+
+# Editor / IDE
 .vscode/*
 !.vscode/extensions.json
-.idea
-.DS_Store
+.idea/
+.cursor/
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-# Environment variables
-.env
-.env.local
-.env.production.local
-.env.development.local
+# Sistema operativo
+.DS_Store
+Thumbs.db
 
-# Build outputs
-build
-.cache
-release
-
-# Binarios de app (no subir a Hosting en Spark ni versionar en git)
-public/*.exe
-public/*.apk
+# Cursor / agent skills (config local)
+.agents/
+skills-lock.json
 
 # Firebase
-.firebaserc
-firebase-debug.log
-firestore-debug.log
-ui-debug.log
+.firebase/
+firebase-debug.log*
+firestore-debug.log*
+ui-debug.log*
+pubsub-debug.log*
+database-debug.log*
+storage-debug.log*
+firebase-export-*
+
+# Credenciales de servicio (nunca commitear)
+*firebase-adminsdk*.json
+serviceAccount*.json
+*-service-account*.json
+*.pem
+*.p12
